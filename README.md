@@ -5,7 +5,7 @@ This repository contains implementations of various machine learning algorithms 
 ## Implemented Algorithms
 
 1. Logistic Regression
-2. (To be added) Linear Regression
+2. Linear Regression
 3. (To be added) Multi-Layer Perceptron (MLP)
 
 ## Optimizers
@@ -15,7 +15,9 @@ This repository contains implementations of various machine learning algorithms 
 
 ## Dataset
 
-The MNIST dataset is used to test the implementations of the algorithms. MNIST is a dataset of handwritten digits and is widely used for training and testing in the field of machine learning.
+* The MNIST dataset is used to test the implementations of classification the algorithms. MNIST is a dataset of handwritten digits and is widely used for training and testing in the field of machine learning.
+
+* A synthetic data is generated to test regression algorithm.
 
 
 ## Project Structure
@@ -24,6 +26,7 @@ ML-Algorithms-From-Scratch/
 ├── classes/                     # Directory containing class implementations
 │   ├── __init__.py
 │   ├── LogisticRegression.py    # Implementation of Logistic Regression
+│   ├── LinearRegression.py      # Implementation of Linear Regression
 │   ├── SGD.py                   # Implementation of Stochastic Gradient Descent Optimizer
 │   ├── utils.py                 # Utility functions (gen_batches, compute_accuracy, load_data, train, etc)
 ├── main.ipynb                   # Notebook demonstrating the use of algorithms
@@ -64,7 +67,6 @@ Please follow these steps to set up the working environment:
 `conda activate ML`
 
 ## Future Work
-- Implement Linear Regression from scratch.
 - Implement Multi-Layer Perceptron (MLP) from scratch.
 - Add other optimizers like Adam, RMSprop, etc.
 - Improve the documentation of code.

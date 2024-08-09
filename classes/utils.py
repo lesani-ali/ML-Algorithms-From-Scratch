@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from torchvision import datasets, transforms
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
+from classes.LinearRegression import LinearRegression
 
 def normalize_data(data):
     """
@@ -69,20 +70,6 @@ def gen_batches(data, labels, batch_size):
     for i in range(0, len(data), batch_size):
         yield data[i:i+batch_size], labels[i:i+batch_size]
 
-def loss(y_true, y_pred):
-    """
-    Compute the binary cross-entropy loss.
-    
-    Args:
-        y_true (numpy.ndarray): True labels.
-        y_pred (numpy.ndarray): Predicted probabilities.
-    
-    Returns:
-        float: Binary cross-entropy loss.
-    """
-    m = y_true.shape[0]
-    loss = -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
-    return loss
     
 def compute_accuracy(y_true, y_pred):
     """
@@ -98,7 +85,7 @@ def compute_accuracy(y_true, y_pred):
     return np.mean(y_true == y_pred)
 
 
-def load_data():
+def load_mnist():
     # Load the MNIST dataset
     transform = transforms.Compose([transforms.ToTensor()])  # Converting image to tensor
     train_dataset = datasets.MNIST(root='./data', train=True, transform=transform, download=True)  # Loading train data
@@ -155,13 +142,38 @@ def load_data():
 
     return data
 
+def load_synthetic_regression_data(num_samples, a, b):
+    # y = ax + b
+    X_train = 2 * np.random.rand(num_samples, 1)
+    y_train = a * X_train + b + np.random.randn(num_samples, 1)
+
+    X_test = 2 * np.random.rand(50, 1)
+    y_test = a * X_test + b + np.random.randn(50, 1)
+
+    # Splitting the training data into training and validation sets
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
+
+    y_train = y_train.reshape(-1, 1)
+    y_val = y_val.reshape(-1, 1)
+    y_test = y_test.reshape(-1, 1)
+
+    data = {}
+    data["train"] = (X_train, y_train)
+    data["val"] = (X_val, y_val)
+    data["test"] = (X_test, y_test)
+
+    return data
+
 # Training loop
 def train(model, data, optimizer, epochs, batch_size):
     X_train, X_val, y_train, y_val = data
     train_losses = []
-    train_accuracies = []
     val_losses = []
-    val_accuracies = []
+
+    is_classification_model = not isinstance(model, LinearRegression)
+    if is_classification_model:
+        val_accuracies = []
+        train_accuracies = []
 
     for epoch in tqdm(range(epochs), desc="Training Epochs"):
         random_indices = np.random.permutation(list(range(X_train.shape[0])))
@@ -182,19 +194,25 @@ def train(model, data, optimizer, epochs, batch_size):
 
         # Compute training loss and accuracy
         output = model(X_train)
-        y_predict = (output >= 0.5).astype(int)
-        train_loss = loss(y_train, output)
-        train_accuracy = compute_accuracy(y_train, y_predict)
+        y_predict_train = (output >= 0.5).astype(int)
+        train_loss = model.loss(y_train, output)
 
         # Compute test loss and accuracy
         output = model(X_val)
-        y_predict = (output >= 0.5).astype(int)
-        val_loss = loss(y_val, output)
-        val_accuracy = compute_accuracy(y_val, y_predict)
+        y_predict_val = (output >= 0.5).astype(int)
+        val_loss = model.loss(y_val, output)
 
         train_losses.append(train_loss)
-        train_accuracies.append(train_accuracy)
         val_losses.append(val_loss)
-        val_accuracies.append(val_accuracy)
 
-    return train_losses, train_accuracies, val_losses, val_accuracies
+        if is_classification_model:
+            train_accuracy = compute_accuracy(y_train, y_predict_train)
+            val_accuracy = compute_accuracy(y_val, y_predict_val)
+
+            train_accuracies.append(train_accuracy)
+            val_accuracies.append(val_accuracy)
+
+    if is_classification_model:
+        return train_losses, train_accuracies, val_losses, val_accuracies
+        
+    return train_losses, val_losses
